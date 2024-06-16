@@ -4,43 +4,87 @@
 #define OLED_RESET   4                  // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(OLED_LARGURA, OLED_ALTURA, &Wire, OLED_RESET);//inicialização do display SSD1306
 
-#define botao 15     //pino 2 fisico será renomeado para a variavel botao
+#include <WiFi.h>
+#include <WiFiMulti.h>   //  Biblioteca Inserida
+WiFiMulti wifiMulti;    //Declarando um recurso para ser utilizado
+
+const uint32_t connectTimeoutMs = 10000;
+
+const char* rede1 = "moto g9 play";
+const char* rede2 = "Tavin Net";
+
+#define botao 15     //pino 15 fisico será renomeado para a variavel botao
 boolean bot = 0;    // bot é a variavel para leitura do status do botão (acionado ou não)      
-int contador = 0;   //contador é uma variavel auxiliar para realizar contagem      
+int contador = 1;   //contador é uma variavel auxiliar para realizar contagem      
+
+#include <DHT.h>
+DHT dht(5, DHT22); // Trocar para 11 posteriormente
 
 void setup()                             
 {              
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);//inicialização do display e endereçamendo I2C
-  display.clearDisplay();                   // Limpa p display              
-  comecarDisplay();
-  display.setCursor(1,8);                 // coordenada coluna=1 e linha=8 para imprimir
-  display.println("*****PROGRAMA PARA TESTAR O COMANDO SWITCH/CASE**********");// texto
   
+  /*
+  Para o desenvolvimento na plataforma Wokwi, foi utilizado o wifi simples, porem basta retirar o comentário destas linhas:
+
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP(rede1, "tbsnzv09826"); // Aqui estamos registrando uma nova rede, com ssid e senha
+  wifiMulti.addAP(rede2, "eotatasnekrl"); // Aqui estamos registrando uma nova rede, com ssid e senha
+  */
+
+  WiFi.begin("Wokwi-GUEST", "", 6);
+  dht.begin();
+  display.clearDisplay();                   // Limpa p display 
+  display.setTextSize(1.5);               // Tamanho da fonte
+  display.setTextColor(WHITE); 
+
+  display.setCursor(0,0);                 // coordenada coluna=1 e linha=8 para imprimir
+  display.println("PROJETO FINAL DE ARIOT");// texto
+  display.setCursor(0,50);
+  display.println("Buscando conexão...");
+  
+  while (WiFi.status() != WL_CONNECTED)
+    {
+      delay(100);
+      Serial.print(".");
+    }
+
+  display.clearDisplay();                   // Limpa p display 
+  display.setTextSize(1.5);               // Tamanho da fonte
+  display.setTextColor(WHITE); 
+  
+  display.setCursor(0,8);
+  display.println("Wifi conectado!");
+
+  display.setCursor(0,30);
+  display.print(WiFi.SSID());
+  display.print(" "); 
+
+  display.setCursor(0,40);
+  display.println("IP ");
+  display.print(WiFi.localIP());
+  
+  display.display();
+
+
   pinMode(botao,INPUT);//define variavel pino que está relacionado ao pino 2, sendo definido como entrada de dados            
   Serial.begin(9600);//inicializa a comunicação serial (para usar o MONITOR SERIAL)
-  Serial.println("*****PROGRAMA PARA TESTAR O COMANDO SWITCH/CASE**********"); 
-  
  
 }                             
 void loop()                                     
 {                                             
-  bot=digitalRead(botao);// faz a leitura do estado no pino 2(BOTAO) e armazena na variavel bot        
-  if(bot == HIGH)        // teste "SE" para verificar se o botão foi acionado passando de 0 para 1 assim verificando a variavel bot            
-    {                                            
-     contador++;         //incrementa 1 na variavel contador                   
-     delay(500);         //delay                    
-     Serial.print("valor do contador:");//MENSAGEM DE TEXTO na mesma linha do valor da variável contador
-     Serial.println(contador);//imprimir o valor da variável contador e pular uma linha 
-                
-         switch(contador)
-           {
-             case 1:caso1();break;//caso 1
-             case 2:caso2();break;//caso 2
-             case 3:caso3();break;//caso 3
-           }
-     Serial.println("saiu do case");//msg de texto
-     Serial.println();//pula linha
-     Serial.println("********NOVO CICLO DE CONTAGEM***************");//MENSAGEM DE TEXTO e pular linha
+  bot=digitalRead(botao);      
+  if(bot == HIGH)                    
+    {
+    delay(100);                                            
+    contador++;         //incrementa 1 na variavel contador                                   
+    Serial.println(contador);
+    switch(contador)
+      {
+        case 1:caso1();break; // informações da conexão
+        case 2:caso2();break; // relogio ntp
+        case 3:caso3();break; // sensor dht
+      }
   }
 }
 
@@ -53,28 +97,86 @@ void comecarDisplay()
 
 void caso1()									                //nome da subrotina
 {
- comecarDisplay();
- display.setCursor(1,8);                 // coordenada coluna=1 e linha=8 para imprimir
- display.println("***subrotina do caso1***");// texto												                      
- Serial.println("***subrotina do caso1***");	//mensagem no monitor serial
- display.display();
+
+  while (contador == 1){
+    // if (wifiMulti.run(connectTimeoutMs) == WL_CONNECTED) 
+    if (WiFi.status() == WL_CONNECTED)
+    { 
+      comecarDisplay();
+      display.setCursor(0,8);
+      display.println("Wifi conectado!");
+
+      display.setCursor(0,30);
+      display.print(WiFi.SSID());
+      display.print(" "); 
+
+      display.setCursor(0,40);
+      display.println("IP ");
+      display.print(WiFi.localIP());
+      display.display();
+
+      if(digitalRead(botao) == HIGH)
+      {
+        break;
+      } 
+    }
+    else 
+    {
+      comecarDisplay();
+      display.setCursor(0,0);
+      display.println("Buscando conexão...");
+      display.display();
+
+      if(digitalRead(botao) == HIGH)
+      {
+        break;
+      } 
+    }
+  }
 }												                      
 
 void caso2()
 {
- comecarDisplay(); 
+ comecarDisplay();
  display.setCursor(1,8);                 // coordenada coluna=1 e linha=8 para imprimir
  display.println("***subrotina do caso2***");// texto                                             
- Serial.println("***subrotina do caso2***");  //mensagem no monitor serial
+ Serial.println(contador);
  display.display();
+
 }
 
 void caso3()
 {
- comecarDisplay();
- display.setCursor(1,8);                 // coordenada coluna=1 e linha=8 para imprimir
- display.println("***subrotina do caso3***");// texto                                             
- Serial.println("***subrotina do caso3***");  //mensagem no monitor serial
- display.display();
- contador=0;                                 //zerar a variavel contador que auxilia na contagem para voltar para o inicio
+  contador=0;                                 //zerar a variavel contador que auxilia na contagem para voltar para o inicio
+  
+  while(contador == 0)
+  {
+    float temp = dht.readTemperature();
+    float humidade = dht.readHumidity();
+
+    display.clearDisplay();                 // Limpa p display
+    display.setTextSize(1);               // Tamanho da fonte
+    display.setTextColor(WHITE); 
+
+    display.setTextSize(1.5);               // Tamanho da fonte
+    display.setCursor(0,0);                 // coordenada coluna=1 e linha=8 para imprimir
+    display.println("Sensor DHT");
+
+    display.setCursor(0,25);
+    display.println(".");
+    display.setCursor(0,30);
+    display.println("C" + String(temp));
+    
+    display.setCursor(0,40);
+    display.println(String(humidade) + "%");
+    display.display();
+    
+  if(digitalRead(botao) == HIGH)
+    {
+      // Caso o botão seja pressionado, o loop encerra.
+      break;
+    } 
+  
+  delay(200);
+  }
 }
