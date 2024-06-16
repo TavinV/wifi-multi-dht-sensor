@@ -155,19 +155,23 @@ void caso3()
     float humidade = dht.readHumidity();
 
     display.clearDisplay();                 // Limpa p display
-    display.setTextSize(1);               // Tamanho da fonte
     display.setTextColor(WHITE); 
 
     display.setTextSize(1.5);               // Tamanho da fonte
-    display.setCursor(0,0);                 // coordenada coluna=1 e linha=8 para imprimir
-    display.println("Sensor DHT");
+    display.setCursor(10,0);                 // coordenada coluna=1 e linha=8 para imprimir
+    display.println("Dados do Sensor DHT");
 
-    display.setCursor(0,25);
+    display.setTextSize(0.7);               // Tamanho da fonte
+    display.setCursor(0,15);
+    display.println("**** Temperatura ****");
+    display.setCursor(35,25);
     display.println(".");
-    display.setCursor(0,30);
-    display.println("C" + String(temp));
+    display.setCursor(40,30);
+    display.println("C " + String(temp));
     
     display.setCursor(0,40);
+    display.println("* Humidade relativa *");
+    display.setCursor(40,55);
     display.println(String(humidade) + "%");
     display.display();
     
@@ -177,6 +181,6 @@ void caso3()
       break;
     } 
   
-  delay(200);
+  delay(50);
   }
 }
