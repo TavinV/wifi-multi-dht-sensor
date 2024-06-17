@@ -18,14 +18,21 @@ boolean bot = 0;    // bot é a variavel para leitura do status do botão (acion
 int contador = 1;   //contador é uma variavel auxiliar para realizar contagem      
 
 #include <DHT.h>
-DHT dht(5, DHT22); // Trocar para 11 posteriormente
+DHT dht(5, DHT11); // Trocar para 11 posteriormente
+
+#include "time.h"//inclusão a biblioteca time
+
+const char* ntpServer = "pool.ntp.org";  //servidor a ser acessado NTP
+const long  gmtOffset_sec =-10800;       //compensação GMT: GMT do Brazil é com -3horas * 3600para converter em segundos assim = -10800// Deslocamento do horário de Greenwich (GMT) em segundos (fuso horário -3 horas)
+const int   daylightOffset_sec =0;       //Deslocamento de horário de verão em segundos (nenhum neste caso)//mudar para 0 pois não é aplicavel no para o Brasil
+
 
 void setup()                             
 {              
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);//inicialização do display e endereçamendo I2C
   
   WiFi.mode(WIFI_STA);
-  wifiMulti.addAP(rede1, "tbsnzv09826"); // Aqui estamos registrando uma nova rede, com ssid e senha
+  wifiMulti.addAP(rede1, "tbsnzv09828"); // Aqui estamos registrando uma nova rede, com ssid e senha
   wifiMulti.addAP(rede2, "eotatasnekrl"); // Aqui estamos registrando uma nova rede, com ssid e senha
   wifiMulti.addAP("Wokwi-GUEST", ""); // Aqui estamos registrando uma nova rede, com ssid e senha
 
@@ -57,24 +64,24 @@ void setup()
   display.print(WiFi.SSID());
   display.print(" "); 
 
+  display.setTextSize(0.7);
   display.setCursor(0,40);
-  display.println("IP ");
-  display.print(WiFi.localIP());
-  
+  display.println("IP : " + String(WiFi.localIP()));
   display.display();
-
 
   pinMode(botao,INPUT);//define variavel pino que está relacionado ao pino 2, sendo definido como entrada de dados            
   Serial.begin(9600);//inicializa a comunicação serial (para usar o MONITOR SERIAL)
- 
+
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);// inicializa para obter o tempo
+  
 }                             
 void loop()                                     
 {                                             
   bot=digitalRead(botao);      
   if(bot == HIGH)                    
     {
-    delay(100);                                            
-    contador++;         //incrementa 1 na variavel contador                                   
+    delay(500);                                            
+    contador++;         //incrementa 1 na variavel contador                                  
     Serial.println(contador);
     switch(contador)
       {
@@ -92,7 +99,7 @@ void comecarDisplay()
   display.setTextColor(WHITE); 
 }
 
-void caso1()									                //nome da subrotina
+void caso1()                                  //nome da subrotina
 {
 
   while (contador == 1){
@@ -107,13 +114,13 @@ void caso1()									                //nome da subrotina
       display.print(WiFi.SSID());
       display.print(" "); 
 
+      display.setTextSize(0.7);
       display.setCursor(0,40);
-      display.println("IP ");
-      display.print(WiFi.localIP());
+      display.println("IP : " + String(WiFi.localIP()));
       display.display();
 
       if(digitalRead(botao) == HIGH)
-      {
+      { 
         break;
       } 
     }
@@ -125,28 +132,54 @@ void caso1()									                //nome da subrotina
       display.display();
 
       if(digitalRead(botao) == HIGH)
-      {
+      {   
         break;
       } 
     }
   }
-}												                      
+}                                             
+
+void printLocalTime()                              //subrotina relogio
+{                                           //inicio da subrotina
+    struct tm timeinfo;                     //criação de uma struct tm chamada de timeinfo que contém todos os detalhes sobre o tempo (H:M:S DD/MM/AA)
+    if(!getLocalTime(&timeinfo))            //Obtenha todos os detalhes sobre data e hora e salve na estrutura timeinfo
+    {
+     return;
+     }                             
+    display.setCursor(0,0);                  //coordenada coluna=1 e linha=8 para imprimir
+    display.println("****** RELOGIO ******");//texto
+    display.setTextSize(2);                  //Tamanho da fonte
+    display.setCursor(15, 16);               //coordenada coluna=15 e linha=16
+    display.println(&timeinfo, "%H:%M:%S");  //imprimi a struct timeinfo no formato Hora:Minuto:Segundo
+    display.setTextSize(0);                  //Tamanho da fonte
+    display.setCursor(30, 40);               //coordenada coluna=30 e linha=40
+    display.println(&timeinfo, "%A");        //imprimi a struct timeinfo o dia da semana
+    display.setCursor(20, 55);               //coordenada coluna=20 e linha=55
+    display.println(&timeinfo, "%d/%B/%Y");  //imprimi a struct timeinfo no formato Dia/mes/ano
+    display.display();                       //finaliza a impressão das msg no display
+    delay(200);                              //delay
+ }                                           //fim da subrotina
 
 void caso2()
 {
- comecarDisplay();
- display.setCursor(1,8);                 // coordenada coluna=1 e linha=8 para imprimir
- display.println("***subrotina do caso2***");// texto                                             
- Serial.println(contador);
- display.display();
+  while(contador == 2) {
+   comecarDisplay();
+   printLocalTime();
+ 
+    if(digitalRead(botao) == HIGH)
+    {
+      Serial.println("Botão apertado!");
+      break;// Caso o botão seja pressionado, o loop encerra.
+    }   
+    
+    delay(100);
+  }
 
 }
 
 void caso3()
-{
-  contador=0;                                 //zerar a variavel contador que auxilia na contagem para voltar para o inicio
-  
-  while(contador == 0)
+{ 
+  while(contador == 3)
   {
     float temp = dht.readTemperature();
     float humidade = dht.readHumidity();
@@ -180,4 +213,5 @@ void caso3()
   
   delay(50);
   }
+  contador=0;                                 //zerar a variavel contador que auxilia na contagem para voltar para o inicio
 }
