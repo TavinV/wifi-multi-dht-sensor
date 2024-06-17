@@ -24,26 +24,23 @@ void setup()
 {              
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);//inicialização do display e endereçamendo I2C
   
-  /*
-  Para o desenvolvimento na plataforma Wokwi, foi utilizado o wifi simples, porem basta retirar o comentário destas linhas:
-
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(rede1, "tbsnzv09826"); // Aqui estamos registrando uma nova rede, com ssid e senha
   wifiMulti.addAP(rede2, "eotatasnekrl"); // Aqui estamos registrando uma nova rede, com ssid e senha
-  */
+  wifiMulti.addAP("Wokwi-GUEST", ""); // Aqui estamos registrando uma nova rede, com ssid e senha
 
-  WiFi.begin("Wokwi-GUEST", "", 6);
   dht.begin();
   display.clearDisplay();                   // Limpa p display 
   display.setTextSize(1.5);               // Tamanho da fonte
   display.setTextColor(WHITE); 
 
   display.setCursor(0,0);                 // coordenada coluna=1 e linha=8 para imprimir
-  display.println("PROJETO FINAL DE ARIOT");// texto
-  display.setCursor(0,50);
+  display.println("PROJETO FINAL DE IOT");// texto
+  display.setCursor(0,30);
   display.println("Buscando conexão...");
-  
-  while (WiFi.status() != WL_CONNECTED)
+  display.display();
+
+  while (wifiMulti.run(connectTimeoutMs) != WL_CONNECTED)
     {
       delay(100);
       Serial.print(".");
@@ -99,8 +96,8 @@ void caso1()									                //nome da subrotina
 {
 
   while (contador == 1){
-    // if (wifiMulti.run(connectTimeoutMs) == WL_CONNECTED) 
-    if (WiFi.status() == WL_CONNECTED)
+    // if (WiFi.status() == WL_CONNECTED)
+    if (wifiMulti.run(connectTimeoutMs) == WL_CONNECTED) 
     { 
       comecarDisplay();
       display.setCursor(0,8);
