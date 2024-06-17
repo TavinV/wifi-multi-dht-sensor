@@ -61,7 +61,7 @@ void setup()
   display.println("Wifi conectado!");
 
   display.setCursor(0,30);
-  display.print(WiFi.SSID());           //
+  display.print(WiFi.SSID());           
   display.print(" "); 
 
   display.setTextSize(0.7);
